@@ -1,0 +1,111 @@
+// pages/index.js
+import { useState } from "react";
+
+export default function Home() {
+  const [formData, setFormData] = useState({ Name: "", Email: "" });
+  const [message, setMessage] = useState({ text: "", type: "" });
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage({ text: "", type: "" });
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/zoho", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setMessage({ text: "تم إرسال البيانات بنجاح!", type: "success" });
+        setFormData({ Name: "", Email: "" });
+      } else {
+        setMessage({
+          text: "فشل إرسال البيانات: " + (data.message || "خطأ غير معروف"),
+          type: "error",
+        });
+      }
+    } catch {
+      setMessage({ text: "حدث خطأ في الاتصال بالخادم.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 400, margin: "auto", padding: 20 }}>
+      <h2 style={{ textAlign: "center" }}>تسجيل عميل جديد</h2>
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="Name">الاسم الكامل</label>
+        <input
+          id="Name"
+          name="Name"
+          type="text"
+          value={formData.Name}
+          onChange={handleChange}
+          placeholder="اكتب اسمك الكامل"
+          required
+          style={{
+            width: "100%",
+            padding: "8px",
+            marginBottom: 12,
+            borderRadius: 6,
+            border: "1px solid #ccc",
+          }}
+        />
+        <label htmlFor="Email">البريد الإلكتروني</label>
+        <input
+          id="Email"
+          name="Email"
+          type="email"
+          value={formData.Email}
+          onChange={handleChange}
+          placeholder="example@mail.com"
+          required
+          style={{
+            width: "100%",
+            padding: "8px",
+            marginBottom: 12,
+            borderRadius: 6,
+            border: "1px solid #ccc",
+          }}
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            width: "100%",
+            padding: "10px",
+            backgroundColor: "#0077ff",
+            color: "#fff",
+            border: "none",
+            borderRadius: 6,
+            fontWeight: "bold",
+            cursor: loading ? "not-allowed" : "pointer",
+          }}
+        >
+          {loading ? "جاري الإرسال..." : "إرسال البيانات"}
+        </button>
+      </form>
+      {message.text && (
+        <p
+          style={{
+            marginTop: 15,
+            color: message.type === "success" ? "green" : "red",
+            fontWeight: "bold",
+            textAlign: "center",
+          }}
+        >
+          {message.text}
+        </p>
+      )}
+    </div>
+  );
+}
